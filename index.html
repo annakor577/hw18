@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>Document</title>
+
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          padding: 8px;
+        }
+        th, td {
+          text-align: left;
+        }
+      </style>
+
+</head>
+<body>
+
+    <h1>Movie Database</h1>
+  
+    <button onclick="getMovies()">Get Movies</button>
+    <table id="moviesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Genre</th>
+          <th>Director</th>
+          <th>Year</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    
+    <h2>Add Movie</h2>
+    <form id="addMovieForm">
+      <label for="title">Title:</label><br>
+      <input type="text" id="title" name="title"><br>
+      <label for="genre">Genre:</label><br>
+      <input type="text" id="genre" name="genre"><br>
+      <label for="director">Director:</label><br>
+      <input type="text" id="director" name="director"><br>
+      <label for="year">Year:</label><br>
+      <input type="number" id="year" name="year"><br>
+      <button type="button" onclick="addMovie()">Add Movie</button>
+    </form>
+    
+    <script>
+      async function getMovies() {
+        const response = await fetch('/movies');
+        const movies = await response.json();
+        const tbody = document.querySelector('#moviesTable tbody');
+        tbody.innerHTML = '';
+        movies.forEach(movie => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${movie.id}</td>
+            <td>${movie.title}</td>
+            <td>${movie.genre}</td>
+            <td>${movie.director}</td>
+            <td>${movie.year}</td>
+            <td>
+              <button onclick="updateMovie(${movie.id})">Update</button>
+              <button onclick="editMovie(${movie.id})">Edit</button>
+              <button onclick="deleteMovie(${movie.id})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+  
+      async function addMovie() {
+        const title = document.getElementById('title').value;
+        const genre = document.getElementById('genre').value;
+        const director = document.getElementById('director').value;
+        const year = document.getElementById('year').value;
+        const movie = { title, genre, director, year };
+  
+        const response = await fetch('/movies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(movie)
+        });
+        if (response.ok) {
+          getMovies();
+        }
+      }
+  
+      async function updateMovie(id) {
+        const title = prompt("Enter new title:");
+        const genre = prompt("Enter new genre:");
+        const director = prompt("Enter new director:");
+        const year = prompt("Enter new year:");
+        const movie = { title, genre, director, year };
+  
+        const response = await fetch(`/movies/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(movie)
+        });
+        if (response.ok) {
+          getMovies();
+        }
+      }
+  
+      async function editMovie(id) {
+        const updatedField = prompt("Enter the field you want to update (title/genre/director/year):");
+        const newValue = prompt(`Enter new value for ${updatedField}:`);
+        const movie = { [updatedField]: newValue };
+  
+        const response = await fetch(`/movies/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(movie)
+        });
+        if (response.ok) {
+          getMovies();
+        }
+      }
+  
+      async function deleteMovie(id) {
+        const response = await fetch(`/movies/${id}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          getMovies();
+        }
+      }
+    </script>
+
+    <script src="./js.js"></script>
+</body>
+</html>
